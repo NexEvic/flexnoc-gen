@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated FlexNoC outputs (intermediate)
+work/
+output_p1_test/
+xbar_output_regression/
+examples/interleaved_output/
+*.pdd
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
