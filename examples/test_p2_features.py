@@ -3,12 +3,18 @@
 A4 AXI4/5, A5 ACE-Lite, A6 AHB, A7 AXI-Lite."""
 
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import (NocProject, AXI, APB, AHB, AXI_Lite, ACE_Lite,
                           PowerDomain, Voltage)
 
-PDD = "test_p2_features.pdd"
+PDD = str(WORK_DIR / "test_p2_features.pdd")
 
 noc = NocProject("p2_test")
 

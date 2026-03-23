@@ -3,7 +3,13 @@
 seqIdAllocation, comment, readPermissions/writePermissions, voltage ref."""
 
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import NocProject, AXI
 
@@ -63,10 +69,11 @@ def main():
                        "SynchronizerCell": "/path/to/S.v",
                    })
 
-    noc.write_pdd("examples/test_p1_features.pdd")
+    _pdd_path = str(WORK_DIR / "test_p1_features.pdd")
+    noc.write_pdd(_pdd_path)
 
     # ---- Self-validation ----
-    with open("examples/test_p1_features.pdd") as f:
+    with open(_pdd_path) as f:
         content = f.read()
 
     checks = [

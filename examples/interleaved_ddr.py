@@ -14,7 +14,13 @@ Global address map:
 """
 
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import NocProject, AXI
 
@@ -42,7 +48,8 @@ noc.add_interleaved_targets(
 
 noc.connect_all()
 noc.set_export("Verilog", simulator="VCS")
-noc.write_pdd("interleaved_ddr.pdd")
+output_path = str(WORK_DIR / "interleaved_ddr.pdd")
+noc.write_pdd(output_path)
 
-print("Generated interleaved_ddr.pdd")
-print(f"Export command: {noc.get_export_command('interleaved_ddr.pdd')}")
+print(f"Generated {output_path}")
+print(f"Export command: {noc.get_export_command(output_path)}")

@@ -2,7 +2,13 @@
 """Simple 2x2 AXI crossbar example — equivalent to axi_xbar_2x2_v3.pdd."""
 
 import sys
-sys.path.insert(0, "..")
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import NocProject, AXI
 
@@ -32,7 +38,7 @@ noc.connect_all()
 noc.set_export("Verilog", simulator="VCS")
 
 # Write PDD
-output_path = "xbar_2x2_generated.pdd"
+output_path = str(WORK_DIR / "xbar_2x2_generated.pdd")
 noc.write_pdd(output_path)
 print(f"PDD written to: {output_path}")
 print(f"Export command: {noc.get_export_command(output_path)}")

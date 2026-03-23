@@ -9,7 +9,13 @@ Features tested:
 """
 
 import sys
-sys.path.insert(0, ".")
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import NocProject, AXI, UserFlag
 
@@ -62,8 +68,9 @@ noc.connect_all()
 noc.set_export("Verilog", simulator="VCS")
 
 # Write PDD
-noc.write_pdd("examples/test_p0_features.pdd")
-print("Generated test_p0_features.pdd")
+_pdd_path = str(WORK_DIR / "test_p0_features.pdd")
+noc.write_pdd(_pdd_path)
+print(f"Generated {_pdd_path}")
 
 # ---- Feature 4: Pipeline stages (manual architecture) ----
 # Note: pipeline stages are configured on DtpSwitch objects.
@@ -73,7 +80,7 @@ print("Generated test_p0_features.pdd")
 # arch.add_switch("sw0", clock=clk).input_pipes = {"crossing_ref": 1}
 
 # Verify the PDD contains expected keys
-with open("examples/test_p0_features.pdd") as f:
+with open(_pdd_path) as f:
     content = f.read()
 
 checks = [

@@ -11,7 +11,11 @@ from xml.etree import ElementTree as ET
 import pytest
 
 # Ensure flexnoc_dsl is importable
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+WORK_DIR = REPO_ROOT / "work"
+WORK_DIR.mkdir(exist_ok=True)
+
+sys.path.insert(0, str(REPO_ROOT))
 
 from flexnoc_dsl import (
     NocProject, AXI, APB, OCP, AHB, AXI_Lite, ACE_Lite,
@@ -32,8 +36,10 @@ def pytest_configure(config):
 
 @pytest.fixture
 def pdd_dir(tmp_path):
-    """Provide a temp directory for PDD output."""
-    return tmp_path
+    """Provide a directory for PDD output under work/test_output/."""
+    test_out = WORK_DIR / "test_output" / tmp_path.name
+    test_out.mkdir(parents=True, exist_ok=True)
+    return test_out
 
 
 def parse_pdd(path: str) -> ET.Element:
