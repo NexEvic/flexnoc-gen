@@ -122,6 +122,8 @@ def simple_2x2(basic_noc, pdd_dir):
 # ---------------------------------------------------------------------------
 
 FLEXNOC_WORK = os.path.expanduser("~/flexnoc-work")
+DOCKER_PDD_STAGE = os.path.join(FLEXNOC_WORK, "noc2pdd", "work", "docker_stage")
+DOCKER_OUTPUT_BASE = os.path.join(FLEXNOC_WORK, "noc2pdd", "work", "docker_output")
 
 DOCKER_SETUP = (
     "ip link set eth0 down; "
@@ -145,17 +147,23 @@ def docker_runner():
         assert result.returncode == 0
     """
     def _run(pdd_path: str, struct_name: str, export_name: str = "exports.Vlog",
-             output_subdir: str = "test_output", timeout: int = 300):
-        # Copy PDD into flexnoc-work so Docker can access it
+             output_subdir: str = None, timeout: int = 300):
+        # Stage PDD under noc2pdd/work/docker_stage/ so Docker can access it
+        os.makedirs(DOCKER_PDD_STAGE, exist_ok=True)
         pdd_basename = os.path.basename(pdd_path)
-        dst = os.path.join(FLEXNOC_WORK, pdd_basename)
+        dst = os.path.join(DOCKER_PDD_STAGE, pdd_basename)
         shutil.copy2(pdd_path, dst)
 
+        # Output goes to noc2pdd/work/docker_output/<subdir>
+        if output_subdir is None:
+            output_subdir = f"docker_output/run_{os.getpid()}"
         output_dir = os.path.join(FLEXNOC_WORK, output_subdir)
         os.makedirs(output_dir, exist_ok=True)
 
+        # Docker-internal paths (all under /work = FLEXNOC_WORK)
+        docker_pdd = f"noc2pdd/work/docker_stage/{pdd_basename}"
         flexnoc_cmd = (
-            f"FlexNoC -d False -p /work/{pdd_basename} exportVerilog "
+            f"FlexNoC -d False -p /work/{docker_pdd} exportVerilog "
             f"-s {struct_name} -c {export_name} -o /work/{output_subdir}"
         )
 
@@ -173,7 +181,7 @@ def docker_runner():
             docker_cmd, capture_output=True, text=True, timeout=timeout,
         )
 
-        # Cleanup PDD copy
+        # Cleanup staged PDD
         if os.path.exists(dst):
             os.remove(dst)
 
@@ -184,8 +192,11 @@ def docker_runner():
 
 @pytest.fixture
 def docker_output_dir():
-    """Return path and cleanup helper for docker output."""
-    subdir = f"pytest_output_{os.getpid()}"
+    """Return (abs_path, docker_subdir) for FlexNoC output, cleaned up after test.
+
+    Output goes to noc2pdd/work/docker_output/pytest_<pid>/ which is gitignored.
+    """
+    subdir = f"noc2pdd/work/docker_output/pytest_{os.getpid()}"
     path = os.path.join(FLEXNOC_WORK, subdir)
     os.makedirs(path, exist_ok=True)
     yield path, subdir
