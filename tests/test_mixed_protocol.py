@@ -8,8 +8,8 @@ from conftest import parse_pdd, assert_pdd_valid
 class TestMixedAXIAPB:
     """AXI + APB mixed protocol."""
 
-    def test_axi_apb_reassembly(self, pdd_dir):
-        """Mixed AXI+APB should auto-add nReassemblyBuffer=2."""
+    def test_axi_apb_no_reassembly_buffer(self, pdd_dir):
+        """Mixed AXI+APB must NOT add nReassemblyBuffer (illegal in FlexNoC 5.3.0)."""
         noc = NocProject("t")
         axi = noc.add_protocol("AXI_p", AXI(addr=32, data=64))
         apb = noc.add_protocol("APB_p", APB(addr=32, data=32))
@@ -25,13 +25,14 @@ class TestMixedAXIAPB:
 
         with open(path) as f:
             content = f.read()
-        assert "nReassemblyBuffer" in content
+        assert "nReassemblyBuffer" not in content
+        assert "version" in content  # APB version field must be present
 
 
 class TestMixedAXIAHB:
     """AXI + AHB mixed protocol."""
 
-    def test_axi_ahb_reassembly(self, pdd_dir):
+    def test_axi_ahb_no_reassembly_buffer(self, pdd_dir):
         noc = NocProject("t")
         axi = noc.add_protocol("AXI_p", AXI(addr=32, data=64))
         ahb = noc.add_protocol("AHB_p", AHB(addr=32, data=32))
@@ -48,8 +49,27 @@ class TestMixedAXIAHB:
 
         with open(path) as f:
             content = f.read()
-        assert "nReassemblyBuffer" in content
+        assert "nReassemblyBuffer" not in content
         assert "AHB" in content
+
+    def test_ahb_initiator_conversion_params(self, pdd_dir):
+        """AHB initiator socket must auto-emit busyIgnoreWaits + combHReady."""
+        noc = NocProject("t")
+        ahb = noc.add_protocol("AHB_p", AHB(addr=32, data=32))
+        apb = noc.add_protocol("APB_p", APB(addr=32, data=32))
+        clk = noc.add_clock("clk")
+        noc.add_initiator("ahb_m", protocol=ahb, clock=clk)
+        noc.add_target("apb_s", protocol=apb, clock=clk, base=0, size="64K")
+        noc.connect_all()
+        noc.set_export("Verilog")
+        path = str(pdd_dir / "test.pdd")
+        noc.write_pdd(path)
+        assert_pdd_valid(path)
+
+        with open(path) as f:
+            content = f.read()
+        assert "busyIgnoreWaits" in content
+        assert "combHReady" in content
 
     def test_ahb_pending_trans_one(self, pdd_dir):
         """AHB target with pending_trans=1 should work."""
