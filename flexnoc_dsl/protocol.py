@@ -29,11 +29,17 @@ def AXI(addr: int = 32, data: int = 64, id: int = 4,
     )
 
 
-def APB(addr: int = 32, data: int = 32, **kwargs) -> Protocol:
-    """Create an APB protocol definition."""
+def APB(addr: int = 32, data: int = 32, version: str = "V3", **kwargs) -> Protocol:
+    """Create an APB protocol definition.
+
+    Args:
+        version: APB version string required by FlexNoC (V2, V3, or V4).
+                 Defaults to V3.
+    """
     return Protocol(
         protocol_type="APB", addr_width=addr, data_width=data,
-        id_width=0, en_read=True, en_write=True, extra=kwargs,
+        id_width=0, en_read=True, en_write=True,
+        extra={"version": version, **kwargs},
     )
 
 

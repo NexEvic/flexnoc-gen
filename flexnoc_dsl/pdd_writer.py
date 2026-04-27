@@ -73,29 +73,25 @@ class PddWriter:
                 ("wAddr", proto.addr_width),
                 ("wData", proto.data_width),
             ])
+        elif proto.protocol_type == "APB":
+            entries.extend([
+                ("wAddr", proto.addr_width),
+                ("wData", proto.data_width),
+                ("version", proto.extra.get("version", "V3")),
+            ])
         else:
-            # APB and others: addr + data
+            # Other protocols: addr + data
             entries.extend([
                 ("wAddr", proto.addr_width),
                 ("wData", proto.data_width),
             ])
         for k, v in proto.extra.items():
+            if proto.protocol_type == "APB" and k == "version":
+                continue  # already emitted above
             entries.append((k, v))
         return entries
 
     # ---- Architecture ----
-
-    def _needs_reassembly(self, init):
-        """Check if initiator connects to targets with different protocol."""
-        init_proto = self.p._protocols.get(init.protocol_ref)
-        if not init_proto:
-            return False
-        for targ in self.p._targets:
-            if self.p._connectivity.get((init.name, targ.name), False):
-                targ_proto = self.p._protocols.get(targ.protocol_ref)
-                if targ_proto and targ_proto.protocol_type != init_proto.protocol_type:
-                    return True
-        return False
 
     def _add_architecture(self, root):
         arch = self.p._architecture
@@ -365,9 +361,6 @@ class PddWriter:
         perf.set("key", "performance")
         _add_kv(perf, "nPendingOrderId", str(init.pending_ids))
         _add_kv(perf, "nPendingTrans", str(init.pending_trans))
-        # nReassemblyBuffer needed when protocol conversion exists
-        if self._needs_reassembly(init):
-            _add_kv(perf, "nReassemblyBuffer", "2")
         # Flow shadows
         for flow in (init.flows or [type("F", (), {"name": "0"})()]):
             f_shadow = SubElement(i_shadow, "shadow")
@@ -581,11 +574,16 @@ class PddWriter:
             pw.set("key", "power")
             _add_kv(pw, "IPpowerDomain",
                     f"(specification:{init.power_domain})")
-        # conversion
-        if init.conversion:
+        # conversion — AHB initiator requires busyIgnoreWaits + combHReady
+        init_proto = self.p._protocols.get(init.protocol_ref)
+        ahb_defaults = {}
+        if init_proto and init_proto.protocol_type == "AHB":
+            ahb_defaults = {"busyIgnoreWaits": "True", "combHReady": "True"}
+        conv_params = {**ahb_defaults, **(init.conversion or {})}
+        if conv_params:
             conv = SubElement(props, "entry")
             conv.set("key", "conversion")
-            for ck, cv in init.conversion.items():
+            for ck, cv in conv_params.items():
                 _add_kv(conv, ck, str(cv))
         else:
             _add_empty_entry(props, "conversion")
