@@ -69,6 +69,12 @@ unset PYTHONHOME && unset PYTHONPATH
 | [docker-e2e.md](guides/docker-e2e.md) | Docker E2E 验证完整流程 |
 | [feature-compatibility.md](guides/feature-compatibility.md) | Feature 冲突矩阵与约束 |
 
+### 案例库
+
+| 文档 | 内容 |
+|------|------|
+| [cases/index.md](cases/index.md) | FlexNoC/PDD 已知失败案例与 debug 入口 |
+
 ### 其他
 
 | 文档 | 内容 |

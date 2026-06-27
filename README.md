@@ -104,6 +104,9 @@ docs/                 # Full documentation
   index.md
   api/
   guides/
+  cases/              # Known failure/debug cases
+scripts/
+  diagnose_pdd_routes.py
 ```
 
 ## Running Tests
@@ -133,6 +136,7 @@ See [`docs/index.md`](docs/index.md) for the full documentation index.
 | [docs/api/project.md](docs/api/project.md) | NocProject reference |
 | [docs/guides/docker-e2e.md](docs/guides/docker-e2e.md) | Docker E2E workflow |
 | [docs/guides/feature-compatibility.md](docs/guides/feature-compatibility.md) | Feature constraints |
+| [docs/cases/index.md](docs/cases/index.md) | Known FlexNoC/PDD failure cases |
 
 ## License
 
